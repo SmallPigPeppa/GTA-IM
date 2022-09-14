@@ -33,7 +33,7 @@ LIMBS = [
 # camera utils.
 def get_focal_length(cam_near_clip, cam_field_of_view):
     near_clip_height = (
-        2 * cam_near_clip * np.tan(cam_field_of_view / 2.0 * (np.pi / 180.0))
+            2 * cam_near_clip * np.tan(cam_field_of_view / 2.0 * (np.pi / 180.0))
     )
 
     # camera focal length
@@ -41,13 +41,13 @@ def get_focal_length(cam_near_clip, cam_field_of_view):
 
 
 def get_2d_from_3d(
-    vertex,
-    cam_coords,
-    cam_rotation,
-    cam_near_clip,
-    cam_field_of_view,
-    WIDTH=1920,
-    HEIGHT=1080,
+        vertex,
+        cam_coords,
+        cam_rotation,
+        cam_near_clip,
+        cam_field_of_view,
+        WIDTH=1920,
+        HEIGHT=1080,
 ):
     WORLD_NORTH = np.array([0.0, 1.0, 0.0], 'double')
     WORLD_UP = np.array([0.0, 0.0, 1.0], 'double')
@@ -57,7 +57,7 @@ def get_2d_from_3d(
     clip_plane_center = cam_coords + cam_near_clip * cam_dir
     camera_center = -cam_near_clip * cam_dir
     near_clip_height = (
-        2 * cam_near_clip * np.tan(cam_field_of_view / 2.0 * (np.pi / 180.0))
+            2 * cam_near_clip * np.tan(cam_field_of_view / 2.0 * (np.pi / 180.0))
     )
     near_clip_width = near_clip_height * WIDTH / HEIGHT
 
@@ -68,20 +68,20 @@ def get_2d_from_3d(
     camera_to_target = near_clip_to_target - camera_center
 
     camera_to_target_unit_vector = camera_to_target * (
-        1.0 / np.linalg.norm(camera_to_target)
+            1.0 / np.linalg.norm(camera_to_target)
     )
 
     view_plane_dist = cam_near_clip / cam_dir.dot(camera_to_target_unit_vector)
 
     new_origin = (
-        clip_plane_center
-        + (near_clip_height / 2.0) * cam_up
-        - (near_clip_width / 2.0) * cam_east
+            clip_plane_center
+            + (near_clip_height / 2.0) * cam_up
+            - (near_clip_width / 2.0) * cam_east
     )
 
     view_plane_point = (
-        view_plane_dist * camera_to_target_unit_vector
-    ) + camera_center
+                               view_plane_dist * camera_to_target_unit_vector
+                       ) + camera_center
     view_plane_point = (view_plane_point + clip_plane_center) - new_origin
     viewPlaneX = view_plane_point.dot(cam_east)
     viewPlaneZ = view_plane_point.dot(cam_up)
@@ -96,7 +96,7 @@ def get_2d_from_3d(
 def screen_x_to_view_plane(x, cam_near_clip, cam_field_of_view):
     # x in (0, 1)
     near_clip_height = (
-        2 * cam_near_clip * np.tan(cam_field_of_view / 2.0 * (np.pi / 180.0))
+            2 * cam_near_clip * np.tan(cam_field_of_view / 2.0 * (np.pi / 180.0))
     )
     near_clip_width = near_clip_height * 1920.0 / 1080.0
 
@@ -116,7 +116,7 @@ def generate_id_map(map_path):
 
 
 def get_depth(
-    vertex, cam_coords, cam_rotation, cam_near_clip, cam_field_of_view
+        vertex, cam_coords, cam_rotation, cam_near_clip, cam_field_of_view
 ):
     WORLD_NORTH = np.array([0.0, 1.0, 0.0], 'double')
     theta = (np.pi / 180.0) * cam_rotation
@@ -128,7 +128,7 @@ def get_depth(
 
     camera_to_target = near_clip_to_target - camera_center
     camera_to_target_unit_vector = camera_to_target * (
-        1.0 / np.linalg.norm(camera_to_target)
+            1.0 / np.linalg.norm(camera_to_target)
     )
 
     depth = np.linalg.norm(camera_to_target) * cam_dir.dot(
@@ -140,7 +140,7 @@ def get_depth(
 
 
 def get_kitti_format_camera_coords(
-    vertex, cam_coords, cam_rotation, cam_near_clip
+        vertex, cam_coords, cam_rotation, cam_near_clip
 ):
     cam_dir, cam_up, cam_east = get_cam_dir_vecs(cam_rotation)
 
@@ -152,7 +152,7 @@ def get_kitti_format_camera_coords(
 
     camera_to_target = near_clip_to_target - camera_center
     camera_to_target_unit_vector = camera_to_target * (
-        1.0 / np.linalg.norm(camera_to_target)
+            1.0 / np.linalg.norm(camera_to_target)
     )
 
     z = np.linalg.norm(camera_to_target) * cam_dir.dot(
@@ -181,13 +181,13 @@ def get_cam_dir_vecs(cam_rotation):
 
 
 def is_before_clip_plane(
-    vertex,
-    cam_coords,
-    cam_rotation,
-    cam_near_clip,
-    cam_field_of_view,
-    WIDTH=1920,
-    HEIGHT=2080,
+        vertex,
+        cam_coords,
+        cam_rotation,
+        cam_near_clip,
+        cam_field_of_view,
+        WIDTH=1920,
+        HEIGHT=2080,
 ):
     WORLD_NORTH = np.array([0.0, 1.0, 0.0], 'double')
     theta = (np.pi / 180.0) * cam_rotation
@@ -200,7 +200,7 @@ def is_before_clip_plane(
     camera_to_target = near_clip_to_target - camera_center
 
     camera_to_target_unit_vector = camera_to_target * (
-        1.0 / np.linalg.norm(camera_to_target)
+            1.0 / np.linalg.norm(camera_to_target)
     )
 
     if cam_dir.dot(camera_to_target_unit_vector) > 0:
@@ -220,15 +220,15 @@ def get_clip_center_and_dir(cam_coords, cam_rotation, cam_near_clip):
 def rotate(a, t):
     d = np.zeros(3, 'double')
     d[0] = np.cos(t[2]) * (
-        np.cos(t[1]) * a[0]
-        + np.sin(t[1]) * (np.sin(t[0]) * a[1] + np.cos(t[0]) * a[2])
+            np.cos(t[1]) * a[0]
+            + np.sin(t[1]) * (np.sin(t[0]) * a[1] + np.cos(t[0]) * a[2])
     ) - (np.sin(t[2]) * (np.cos(t[0]) * a[1] - np.sin(t[0]) * a[2]))
     d[1] = np.sin(t[2]) * (
-        np.cos(t[1]) * a[0]
-        + np.sin(t[1]) * (np.sin(t[0]) * a[1] + np.cos(t[0]) * a[2])
+            np.cos(t[1]) * a[0]
+            + np.sin(t[1]) * (np.sin(t[0]) * a[1] + np.cos(t[0]) * a[2])
     ) + (np.cos(t[2]) * (np.cos(t[0]) * a[1] - np.sin(t[0]) * a[2]))
     d[2] = -np.sin(t[1]) * a[0] + np.cos(t[1]) * (
-        np.sin(t[0]) * a[1] + np.cos(t[0]) * a[2]
+            np.sin(t[0]) * a[1] + np.cos(t[0]) * a[2]
     )
     return d
 
@@ -320,10 +320,10 @@ def compute_bbox_ratio(bbox2, bbox):
 
 def compute_iou(boxA, boxB):
     if (
-        boxA[0] > boxB[2]
-        or boxB[0] > boxA[2]
-        or boxA[1] > boxB[3]
-        or boxB[1] > boxA[3]
+            boxA[0] > boxB[2]
+            or boxB[0] > boxA[2]
+            or boxA[1] > boxB[3]
+            or boxB[1] > boxA[3]
     ):
         return 0
     # determine the (x, y)-coordinates of the intersection rectangle
@@ -350,14 +350,14 @@ def compute_iou(boxA, boxB):
 
 
 def project2dline(
-    p1,
-    p2,
-    cam_coords,
-    cam_rotation,
-    cam_near_clip=0.15,
-    cam_field_of_view=50.0,
-    WIDTH=1920,
-    HEIGHT=2080,
+        p1,
+        p2,
+        cam_coords,
+        cam_rotation,
+        cam_near_clip=0.15,
+        cam_field_of_view=50.0,
+        WIDTH=1920,
+        HEIGHT=2080,
 ):
     before1 = is_before_clip_plane(
         p1, cam_coords, cam_rotation, cam_near_clip, cam_field_of_view
@@ -456,8 +456,8 @@ def read_depthmap(name, cam_near_clip, cam_far_clip):
     depth.dtype = np.uint32
     depth = 0.05 * 1000 / depth.astype('float')
     depth = (
-        cam_near_clip
-        * cam_far_clip
-        / (cam_near_clip + depth * (cam_far_clip - cam_near_clip))
+            cam_near_clip
+            * cam_far_clip
+            / (cam_near_clip + depth * (cam_far_clip - cam_near_clip))
     )
     return depth
