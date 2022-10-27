@@ -17,22 +17,13 @@ from gta_utils import LIMBS, read_depthmap
 
 sys.path.append('./')
 
+from typing import Tuple, Union, List
+import pyrender
+from pyrender import Node, DirectionalLight
+import trimesh
+import matplotlib.pyplot as plt
+from PIL import Image
 
-def create_skeleton_viz_data(nskeletons, njoints):
-    lines = []
-    colors = []
-    for i in range(nskeletons):
-        cur_lines = np.asarray(LIMBS)
-        cur_lines += i * njoints
-        lines.append(cur_lines)
-
-        single_color = np.zeros([njoints, 3])
-        single_color[:] = [0.0, float(i) / nskeletons, 1.0]
-        colors.append(single_color[1:])
-
-    lines = np.concatenate(lines, axis=0)
-    colors = np.asarray(colors).reshape(-1, 3)
-    return lines, colors
 
 
 def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
@@ -42,7 +33,8 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     pcd = o3d.geometry.PointCloud()
     global_pcd = o3d.geometry.PointCloud()
     # use nearby RGBD frames to create the environment point cloud
-    for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
+    # for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
+    for i in range(0, 1):
         fname = rec_idx + '/' + '{:05d}'.format(i) + '.png'
         if os.path.exists(fname):
             infot = info[i]
@@ -104,52 +96,37 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             global_pcd.points.extend(pcd.points)
             global_pcd.colors.extend(pcd.colors)
 
-    # read gt pose in world coordinate, visualize nearby frame as well
-    joints = info_npz['joints_3d_world'][(f_id - 30) : (f_id + 30) : 10]
-    tl, jn, _ = joints.shape
-    joints = joints.reshape(-1, 3)
 
-    # create skeletons in open3d
-    nskeletons = tl
-    lines, colors = create_skeleton_viz_data(nskeletons, jn)
-    line_set = LineSet()
-    line_set.points = Vector3dVector(joints)
-    line_set.lines = Vector2iVector(lines)
-    line_set.colors = Vector3dVector(colors)
+    mesh_path='FPS-5-2020-06-11-10-06-48/meshes/._001.obj_cam_CS.obj'
+    # body_mesh_name='._001.obj_cam_CS'
+    # mesh_name=(f"{os.path.join(mesh_dir, body_mesh_name)}.obj")
+    mesh=o3d.io.read_triangle_mesh('001.obj')
+    print(np.asarray(mesh.vertices))
+    print(np.asarray(mesh.triangles))
+    mesh.compute_vertex_normals()
+    draw_geometries([global_pcd])
+    draw_geometries([mesh])
 
-    vis_list = [global_pcd, line_set]
-    for j in range(joints.shape[0]):
-        # spine joints
-        if j % jn == 11 or j % jn == 12 or j % jn == 13:
-            continue
-        transformation = np.identity(4)
-        transformation[:3, 3] = joints[j]
-        # head joint
-        if j % jn == 0:
-            r = 0.07
-        else:
-            r = 0.03
-
-        sphere = o3d.geometry.create_mesh_sphere(radius=r)
-        sphere.paint_uniform_color([0.0, float(j // jn) / nskeletons, 1.0])
-        vis_list.append(sphere.transform(transformation))
-
-    draw_geometries(vis_list)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('-pa', '--path', default='demo')
     parser.add_argument(
-        '-f', '--frame', default=2720, type=int, help='frame to visualize'
+        '-f', '--frame', default=100, type=int, help='frame to visualize'
     )
     parser.add_argument(
         '-fw',
         '--fusion-window',
-        default=80,
+        default=200,
         type=int,
         help='timesteps of RGB frames for fusing',
     )
     args = parser.parse_args()
+    current_dir=os.getcwd()
+    data_path=os.path.join(os.path.dirname(current_dir),'datasets','GTA_IM','FPS-5','2020-06-11-10-06-48')
+    data_path='2020-06-11-10-06-48'
+    # data_path='C:\Users\lwz\Desktop\code\datasets\GTA-IM\FPS-5\2020-06-11-10-06-48'
+    # vis_skeleton_pcd(args.path + '/', args.frame, args.fusion_window)
+    vis_skeleton_pcd(data_path+ '/', args.frame, args.fusion_window)
 
-    vis_skeleton_pcd(args.path + '/', args.frame, args.fusion_window)

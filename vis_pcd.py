@@ -42,7 +42,8 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     pcd = o3d.geometry.PointCloud()
     global_pcd = o3d.geometry.PointCloud()
     # use nearby RGBD frames to create the environment point cloud
-    for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
+    # for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
+    for i in range(0,3):
         fname = rec_idx + '/' + '{:05d}'.format(i) + '.png'
         if os.path.exists(fname):
             infot = info[i]
@@ -56,19 +57,19 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             depth[depth > 20.0] = 0
 
             # obtain the human mask
-            p = info_npz['joints_2d'][i, 0]
-            fname = rec_idx + '/' + '{:05d}'.format(i) + '_id.png'
-            id_map = cv2.imread(fname, cv2.IMREAD_ANYDEPTH)
-            human_id = id_map[
-                np.clip(int(p[1]), 0, 1079), np.clip(int(p[0]), 0, 1919)
-            ]
-
-            mask = id_map == human_id
-            kernel = np.ones((3, 3), np.uint8)
-            mask_dilation = cv2.dilate(
-                mask.astype(np.uint8), kernel, iterations=1
-            )
-            depth = depth * (1 - mask_dilation[..., None])
+            # p = info_npz['joints_2d'][i, 0]
+            # fname = rec_idx + '/' + '{:05d}'.format(i) + '_id.png'
+            # id_map = cv2.imread(fname, cv2.IMREAD_ANYDEPTH)
+            # human_id = id_map[
+            #     np.clip(int(p[1]), 0, 1079), np.clip(int(p[0]), 0, 1919)
+            # ]
+            #
+            # mask = id_map == human_id
+            # kernel = np.ones((3, 3), np.uint8)
+            # mask_dilation = cv2.dilate(
+            #     mask.astype(np.uint8), kernel, iterations=1
+            # )
+            # depth = depth * (1 - mask_dilation[..., None])
             depth = o3d.geometry.Image(depth.astype(np.float32))
             # cv2.imshow('tt', mask.astype(np.uint8)*255)
             # cv2.waitKey(0)
@@ -101,47 +102,50 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             depth_pts = depth_pts_aug.dot(cam_extr_ref)[:, :3]
             pcd.points = Vector3dVector(depth_pts)
 
-            global_pcd.points.extend(pcd.points)
-            global_pcd.colors.extend(pcd.colors)
+            # global_pcd.points.extend(pcd.points)
+            # global_pcd.colors.extend(pcd.colors)
+            # vis_list = [pcd]
+            draw_geometries([pcd])
 
     # read gt pose in world coordinate, visualize nearby frame as well
-    joints = info_npz['joints_3d_world'][(f_id - 30) : (f_id + 30) : 10]
-    tl, jn, _ = joints.shape
-    joints = joints.reshape(-1, 3)
+    # joints = info_npz['joints_3d_world'][(f_id - 30) : (f_id + 30) : 10]
+    # tl, jn, _ = joints.shape
+    # joints = joints.reshape(-1, 3)
 
-    # create skeletons in open3d
-    nskeletons = tl
-    lines, colors = create_skeleton_viz_data(nskeletons, jn)
-    line_set = LineSet()
-    line_set.points = Vector3dVector(joints)
-    line_set.lines = Vector2iVector(lines)
-    line_set.colors = Vector3dVector(colors)
+    # # create skeletons in open3d
+    # nskeletons = tl
+    # lines, colors = create_skeleton_viz_data(nskeletons, jn)
+    # line_set = LineSet()
+    # line_set.points = Vector3dVector(joints)
+    # line_set.lines = Vector2iVector(lines)
+    # line_set.colors = Vector3dVector(colors)
 
-    vis_list = [global_pcd, line_set]
-    for j in range(joints.shape[0]):
-        # spine joints
-        if j % jn == 11 or j % jn == 12 or j % jn == 13:
-            continue
-        transformation = np.identity(4)
-        transformation[:3, 3] = joints[j]
-        # head joint
-        if j % jn == 0:
-            r = 0.07
-        else:
-            r = 0.03
-
-        sphere = o3d.geometry.create_mesh_sphere(radius=r)
-        sphere.paint_uniform_color([0.0, float(j // jn) / nskeletons, 1.0])
-        vis_list.append(sphere.transform(transformation))
-
-    draw_geometries(vis_list)
+    # vis_list = [global_pcd, line_set]
+    # vis_list = [global_pcd]
+    # # for j in range(joints.shape[0]):
+    # #     # spine joints
+    # #     if j % jn == 11 or j % jn == 12 or j % jn == 13:
+    # #         continue
+    # #     transformation = np.identity(4)
+    # #     transformation[:3, 3] = joints[j]
+    # #     # head joint
+    # #     if j % jn == 0:
+    # #         r = 0.07
+    # #     else:
+    # #         r = 0.03
+    # #
+    # #     sphere = o3d.geometry.create_mesh_sphere(radius=r)
+    # #     sphere.paint_uniform_color([0.0, float(j // jn) / nskeletons, 1.0])
+    # #     vis_list.append(sphere.transform(transformation))
+    #
+    # draw_geometries(vis_list)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('-pa', '--path', default='demo')
+    parser.add_argument('-pa', '--path', default='../datasets/GTA-IM/FPS-5/2020-06-11-10-06-48')
     parser.add_argument(
-        '-f', '--frame', default=2720, type=int, help='frame to visualize'
+        '-f', '--frame', default=0, type=int, help='frame to visualize'
     )
     parser.add_argument(
         '-fw',
