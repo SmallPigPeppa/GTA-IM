@@ -9,6 +9,7 @@ import sys
 
 import cv2
 import numpy as np
+import numpy.linalg
 import open3d as o3d
 # from open3d import (LineSet, PinholeCameraIntrinsic, Vector2iVector,
 #                     Vector3dVector, draw_geometries)
@@ -17,8 +18,30 @@ from gta_utils import LIMBS, read_depthmap
 
 sys.path.append('./')
 
+from typing import Tuple, Union, List
+import pyrender
+from pyrender import Node, DirectionalLight
+import trimesh
+import matplotlib.pyplot as plt
+from PIL import Image
 
 
+
+def create_skeleton_viz_data(nskeletons, njoints):
+    lines = []
+    colors = []
+    for i in range(nskeletons):
+        cur_lines = np.asarray(LIMBS)
+        cur_lines += i * njoints
+        lines.append(cur_lines)
+
+        single_color = np.zeros([njoints, 3])
+        single_color[:] = [0.0, float(i) / nskeletons, 1.0]
+        colors.append(single_color[1:])
+
+    lines = np.concatenate(lines, axis=0)
+    colors = np.asarray(colors).reshape(-1, 3)
+    return lines, colors
 
 
 def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
@@ -29,7 +52,7 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     global_pcd = o3d.geometry.PointCloud()
     # use nearby RGBD frames to create the environment point cloud
     # for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
-    for i in range(0, 1):
+    for i in range(0, 100):
         fname = rec_idx + '/' + '{:05d}'.format(i) + '.png'
         if os.path.exists(fname):
             infot = info[i]
@@ -64,14 +87,14 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             color_raw = o3d.io.read_image(fname)
 
             focal_length = info_npz['intrinsics'][f_id, 0, 0]
-            rgbd_image = o3d.geometry.create_rgbd_image_from_color_and_depth(
+            rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
                 color_raw,
                 depth,
                 depth_scale=1.0,
                 depth_trunc=15.0,
                 convert_rgb_to_intensity=False,
             )
-            pcd = o3d.geometry.create_point_cloud_from_rgbd_image(
+            pcd =o3d.geometry.PointCloud.create_from_rgbd_image(
                 rgbd_image,
                 o3d.camera.PinholeCameraIntrinsic(
                     o3d.camera.PinholeCameraIntrinsic(
@@ -91,16 +114,23 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             global_pcd.points.extend(pcd.points)
             global_pcd.colors.extend(pcd.colors)
 
-
-    mesh_path='FPS-5-2020-06-11-10-06-48/meshes/._001.obj_cam_CS.obj'
-    # body_mesh_name='._001.obj_cam_CS'
-    # mesh_name=(f"{os.path.join(mesh_dir, body_mesh_name)}.obj")
-    mesh=o3d.io.read_triangle_mesh('001.obj')
-    print(np.asarray(mesh.vertices))
-    print(np.asarray(mesh.triangles))
+    mesh_dir='FPS-5-2020-06-11-10-06-48/meshes'
+    body_mesh_name='001'
+    mesh_name=(f"{os.path.join(mesh_dir, body_mesh_name)}.obj")
+    mesh=o3d.io.read_triangle_mesh(mesh_name)
+    np.asarray(mesh.vertices)
+    np.asarray(mesh.triangles)
     mesh.compute_vertex_normals()
-    draw_geometries([global_pcd])
-    draw_geometries([mesh])
+    t=-1*info_npz['world2cam_trans'][0][3,:3]
+    r=info_npz['world2cam_trans'][0][:3,:3].T
+    rinv=numpy.linalg.inv(r)
+    print(t)
+    import copy
+    mesh_t=copy.deepcopy(mesh).translate(t,relative=True)
+    mesh_r=copy.deepcopy(mesh_t).rotate(rinv,center=(0,0,0))
+    # # o3d.visualization.draw_geometries([global_pcd,mesh_world])
+    # o3d.visualization.draw_geometries([mesh,mesh_r])
+    o3d.visualization.draw_geometries([mesh_r,global_pcd])
 
 
 
