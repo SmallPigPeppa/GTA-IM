@@ -60,7 +60,7 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             if 'cam_far_clip' in infot.keys():
                 cam_far_clip = infot['cam_far_clip']
             else:
-                cam_far_clip = 800. 
+                cam_far_clip = 800.
             depth = read_depthmap(fname, cam_near_clip, cam_far_clip)
             # delete points that are more than 20 meters away
             depth[depth > 20.0] = 0
@@ -130,7 +130,32 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     mesh_r=copy.deepcopy(mesh_t).rotate(rinv,center=(0,0,0))
     # # o3d.visualization.draw_geometries([global_pcd,mesh_world])
     # o3d.visualization.draw_geometries([mesh,mesh_r])
-    o3d.visualization.draw_geometries([mesh_r,global_pcd])
+    # o3d.visualization.draw_geometries([mesh_r,global_pcd])
+
+
+
+    render=o3d.visualization.rendering.OffscreenRenderer(640,480)
+    render.scene.set_background([0,0,0])
+    render.scene.add_geometry('pcd',global_pcd)
+    render.scene.add_geometry('mesh',mesh_r)
+    render.scene.set_lighting(render.scene.LightingProfile.NO_SHADOWS,(0,0,0))
+    render.scene.camera.look_at([0,0,0],[0,0,0],[0,0,0])
+    img=render.render_to_image()
+    cv2.imshow(np.array(img))
+
+    # vis=o3d.visualization.Visualizer()
+    # vis.create_window()
+    # vis.add_geometry(mesh_r)
+    # vis.add_geometry(global_pcd)
+    # ctr=vis.get_view_control()
+    # # ctr.change_field_of_view(step=-20.0)
+    # ctr.rotate(0,-300)
+    # ctr.scale(-7)
+    # vis.run()
+    # # image=vis.capture_screen_image(False)
+    # image=vis.capture_screen_float_buffer(False)
+    # plt.imsave(f'test3.png',np.asarray(image),dpi=128)
+    # vis.destroy_window()
 
 
 
@@ -151,7 +176,6 @@ if __name__ == '__main__':
     current_dir=os.getcwd()
     data_path=os.path.join(os.path.dirname(current_dir),'datasets','GTA_IM','FPS-5','2020-06-11-10-06-48')
     data_path='2020-06-11-10-06-48'
-    data_path = 'C:/Users/90532/Desktop/Datasets/GTA-IM/FPS-5/2020-06-11-10-06-48'
     # data_path='C:\Users\lwz\Desktop\code\datasets\GTA-IM\FPS-5\2020-06-11-10-06-48'
     # vis_skeleton_pcd(args.path + '/', args.frame, args.fusion_window)
     vis_skeleton_pcd(data_path+ '/', args.frame, args.fusion_window)

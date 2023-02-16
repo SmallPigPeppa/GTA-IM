@@ -52,7 +52,7 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     global_pcd = o3d.geometry.PointCloud()
     # use nearby RGBD frames to create the environment point cloud
     # for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
-    for i in range(0, 1):
+    for i in range(0, 10):
         fname = rec_idx + '/' + '{:05d}'.format(i) + '.png'
         if os.path.exists(fname):
             infot = info[i]
@@ -60,7 +60,7 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             if 'cam_far_clip' in infot.keys():
                 cam_far_clip = infot['cam_far_clip']
             else:
-                cam_far_clip = 800. 
+                cam_far_clip = 800.
             depth = read_depthmap(fname, cam_near_clip, cam_far_clip)
             # delete points that are more than 20 meters away
             depth[depth > 20.0] = 0
@@ -114,23 +114,38 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
             global_pcd.points.extend(pcd.points)
             global_pcd.colors.extend(pcd.colors)
 
-    mesh_dir='FPS-5-2020-06-11-10-06-48/meshes'
-    body_mesh_name='001'
-    mesh_name=(f"{os.path.join(mesh_dir, body_mesh_name)}.obj")
-    mesh=o3d.io.read_triangle_mesh(mesh_name)
-    np.asarray(mesh.vertices)
-    np.asarray(mesh.triangles)
-    mesh.compute_vertex_normals()
-    t=-1*info_npz['world2cam_trans'][0][3,:3]
-    r=info_npz['world2cam_trans'][0][:3,:3].T
-    rinv=numpy.linalg.inv(r)
-    print(t)
-    import copy
-    mesh_t=copy.deepcopy(mesh).translate(t,relative=True)
-    mesh_r=copy.deepcopy(mesh_t).rotate(rinv,center=(0,0,0))
-    # # o3d.visualization.draw_geometries([global_pcd,mesh_world])
-    # o3d.visualization.draw_geometries([mesh,mesh_r])
-    o3d.visualization.draw_geometries([mesh_r,global_pcd])
+    mesh_dir='C:/Users/90532/Desktop/Datasets/GTA-IM/meshes'
+    for i in range(1):
+        body_mesh_name = '{:03d}'.format(i+1)
+        mesh_name=(f"{os.path.join(mesh_dir, body_mesh_name)}.obj")
+        mesh=o3d.io.read_triangle_mesh(mesh_name)
+        np.asarray(mesh.vertices)
+        np.asarray(mesh.triangles)
+        mesh.compute_vertex_normals()
+        t=-1*info_npz['world2cam_trans'][0][3,:3]
+        r=info_npz['world2cam_trans'][0][:3,:3].T
+        rinv=numpy.linalg.inv(r)
+        print(t)
+        import copy
+        mesh_t=copy.deepcopy(mesh).translate(t,relative=True)
+        mesh_r=copy.deepcopy(mesh_t).rotate(rinv,center=(0,0,0))
+        # # o3d.visualization.draw_geometries([global_pcd,mesh_world])
+        # o3d.visualization.draw_geometries([mesh,mesh_r])
+        o3d.visualization.draw_geometries([mesh_r,global_pcd])
+        vis=o3d.visualization.Visualizer()
+        vis.create_window()
+        vis.add_geometry(mesh_r)
+        vis.add_geometry(global_pcd)
+        ctr=vis.get_view_control()
+        # ctr.change_field_of_view(step=-20.0)
+        ctr.rotate(0,-300)
+        ctr.scale(-7)
+        vis.run()
+        # image=vis.capture_screen_image(False)
+        image=vis.capture_screen_float_buffer(False)
+        image_out_name = '{:03d}'.format(i)
+        plt.imsave(f'out/{image_out_name}.png',np.asarray(image),dpi=1)
+        vis.destroy_window()
 
 
 

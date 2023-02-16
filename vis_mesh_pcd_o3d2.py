@@ -1,4 +1,4 @@
- """
+"""
 GTA-IM Dataset
 """
 
@@ -52,7 +52,7 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     global_pcd = o3d.geometry.PointCloud()
     # use nearby RGBD frames to create the environment point cloud
     # for i in range(f_id - fusion_window // 2, f_id + fusion_window // 2, 10):
-    for i in range(0, 100):
+    for i in range(0, 955):
         fname = rec_idx + '/' + '{:05d}'.format(i) + '.png'
         if os.path.exists(fname):
             infot = info[i]
@@ -130,7 +130,19 @@ def vis_skeleton_pcd(rec_idx, f_id, fusion_window=20):
     mesh_r=copy.deepcopy(mesh_t).rotate(rinv,center=(0,0,0))
     # # o3d.visualization.draw_geometries([global_pcd,mesh_world])
     # o3d.visualization.draw_geometries([mesh,mesh_r])
-    o3d.visualization.draw_geometries([mesh_r,global_pcd])
+    # o3d.visualization.draw_geometries([mesh_r,global_pcd])
+    vis=o3d.visualization.Visualizer()
+    vis.create_window()
+    vis.add_geometry(mesh_r)
+    vis.add_geometry(global_pcd)
+    ctr=vis.get_view_control()
+    # ctr.change_field_of_view(step=-15.0)
+    ctr.rotate(45,45)
+    vis.run()
+    # image=vis.capture_screen_image(False)
+    image=vis.capture_screen_float_buffer(False)
+    plt.imsave(f'test.png',np.asarray(image),dpi=128)
+    vis.destroy_window()
 
 
 
